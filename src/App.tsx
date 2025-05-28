@@ -1,6 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
 import { AutoResizedTextArea } from './components/AutoResizedTextArea';
-import { TypewriterText } from './components/TypewriterText';
 import { generateSymmetricKey, encryptText, exportKeyToString } from './utils/crypto';
 import { uploadToBlobse } from './utils/blobse';
 import MessageViewer from './components/MessageViewer';

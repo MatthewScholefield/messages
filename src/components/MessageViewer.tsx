@@ -1,4 +1,4 @@
-import { useEffect, useState, useRef } from 'react';
+import { useEffect, useState } from 'react';
 import { TypewriterText } from './TypewriterText';
 import { importKeyFromString, decryptText } from '../utils/crypto';
 import { fetchFromBlobse } from '../utils/blobse';
