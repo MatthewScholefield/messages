@@ -7,6 +7,7 @@ const MessageViewer = () => {
   const [decryptedMessage, setDecryptedMessage] = useState<string | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(false);
+  const [id, setId] = useState<string | null>(null);
 
   // Effect for Fetching and Decryption
   useEffect(() => {
@@ -19,6 +20,7 @@ const MessageViewer = () => {
       const params = new URLSearchParams(hash.split('?')[1]);
       const id = params.get('id');
       const keyString = params.get('key');
+      setId(id); // Store the ID for potential future use
 
       if (!id || !keyString) {
         setErrorMessage("Invalid link: Missing ID or key.");
@@ -55,9 +57,10 @@ const MessageViewer = () => {
       <div className="container-center space-y-8">
         {isLoading && <p className="text-center text-lg text-neutral-600 animate-pulse">Loading message...</p>}
         {errorMessage && <p className="mt-4 text-red-600 text-sm font-medium p-2 bg-red-50 rounded">{errorMessage}</p>}
-        {decryptedMessage && (
+        {id && decryptedMessage && (
           <div className="bg-white p-6 shadow-lg rounded-md">
             <TypewriterText
+              messageId={id} // Pass the ID for potential future use
               fullText={decryptedMessage}
               className="text-lg leading-relaxed whitespace-pre-wrap p-3"
             />

@@ -1,37 +1,42 @@
 import { useState, useEffect } from "react";
 import { useIntersectionObserver } from "@uidotdev/usehooks";
-import { useTypingStore } from "../store/typingStore"; // Added import
+import { useTypingStore } from "../store/typingStore";
 
 const FAST_TYPING_SPEED = 5; // Milliseconds for fast typing when off-screen
 const FADE_IN_DURATION = 500; // Must match Tailwind's transition duration
 
 interface TypewriterTextProps {
+  messageId: string; // Added prop for message identification
   fullText: string;
   typingSpeed?: number;
   className?: string;
 }
 
 interface TypingParagraphProps {
+  messageId: string; // Added prop for message identification
   text: string;
   originalTypingSpeed: number; // Renamed from typingSpeed
   paragraphIndex: number; // Added prop
 }
 
-const TypingParagraph: React.FC<TypingParagraphProps> = ({ text, originalTypingSpeed, paragraphIndex }) => {
+const TypingParagraph: React.FC<TypingParagraphProps> = ({ messageId, text, originalTypingSpeed, paragraphIndex }) => {
   const [displayedText, setDisplayedText] = useState("");
   const [currentIndex, setCurrentIndex] = useState(0);
-  const [hasFadedIn, setHasFadedIn] = useState(false); // New state for fade-in completion
+  const [hasFadedIn, setHasFadedIn] = useState(false);
   const [currentLocalTypingSpeed, setCurrentLocalTypingSpeed] = useState(originalTypingSpeed);
-  const [hasLocallyCompletedTyping, setHasLocallyCompletedTyping] = useState(false);
-  const [isWaitingAfterParagraph, setIsWaitingAfterParagraph] = useState(false); // New state
+  const [isWaitingAfterParagraph, setIsWaitingAfterParagraph] = useState(false);
 
-  const storeActiveParagraphIndex = useTypingStore(state => state.activeParagraphIndex);
-  const storeIsTypingChainActive = useTypingStore(state => state.isTypingChainActive);
+  const chainState = useTypingStore(state => state.actions.getTypingChainState(messageId));
   const storeActions = useTypingStore(state => state.actions);
+  
+  // Get the chain state for this specific message
+  const storeActiveParagraphIndex = chainState.activeParagraphIndex;
+  const storeIsTypingChainActive = chainState.isTypingChainActive;
 
-  const [paragraphRef, entry] = useIntersectionObserver({ threshold: 0.1, rootMargin: "0px 0px -50px 0px" });
+  const [paragraphRef, entry] = useIntersectionObserver({ threshold: 0.1 });
   const isIntersecting = entry?.isIntersecting ?? false;
 
+  const hasLocallyCompletedTyping = storeActiveParagraphIndex > paragraphIndex;
   const isMyTurn = paragraphIndex === storeActiveParagraphIndex && storeIsTypingChainActive;
 
   // Effect to reset paragraph state if text or index changes (for component reuse)
@@ -39,9 +44,8 @@ const TypingParagraph: React.FC<TypingParagraphProps> = ({ text, originalTypingS
     setDisplayedText("");
     setCurrentIndex(0);
     setHasFadedIn(false);
-    setHasLocallyCompletedTyping(false);
     setCurrentLocalTypingSpeed(originalTypingSpeed);
-  }, [text, paragraphIndex, originalTypingSpeed]);
+  }, [messageId, paragraphIndex, originalTypingSpeed]);
 
   // Effect for fade-in logic
   useEffect(() => {
@@ -73,10 +77,9 @@ const TypingParagraph: React.FC<TypingParagraphProps> = ({ text, originalTypingS
   // Effect to handle empty text paragraphs
   useEffect(() => {
     if (isMyTurn && hasFadedIn && text.length === 0 && !hasLocallyCompletedTyping) {
-      setHasLocallyCompletedTyping(true);
-      storeActions.advanceToNextParagraph();
+      storeActions.advanceToNextParagraph(messageId);
     }
-  }, [isMyTurn, hasFadedIn, text, hasLocallyCompletedTyping, storeActions]);
+  }, [isMyTurn, hasFadedIn, text, hasLocallyCompletedTyping, storeActions, messageId]);
 
   // Typing effect for non-empty paragraphs
   useEffect(() => {
@@ -94,11 +97,10 @@ const TypingParagraph: React.FC<TypingParagraphProps> = ({ text, originalTypingS
       // Add post-paragraph delay before advancing
       if (!isWaitingAfterParagraph) {
         setIsWaitingAfterParagraph(true);
-        const delay = originalTypingSpeed * 20 * (text.length > 0 ? 1 : 0); // Only delay for non-empty
+        const delay = originalTypingSpeed * 10 * (text.length > 0 ? 1 : 0); // Only delay for non-empty
         setTimeout(() => {
-          setHasLocallyCompletedTyping(true);
           setIsWaitingAfterParagraph(false);
-          storeActions.advanceToNextParagraph();
+          storeActions.advanceToNextParagraph(messageId);
         }, delay);
       }
       return;
@@ -143,8 +145,9 @@ const TypingParagraph: React.FC<TypingParagraphProps> = ({ text, originalTypingS
     hasLocallyCompletedTyping,
     storeActions,
     displayedText,
-    isWaitingAfterParagraph, // Add to dependencies
-    originalTypingSpeed // Add to dependencies
+    isWaitingAfterParagraph,
+    originalTypingSpeed,
+    messageId // Add messageId to dependencies
   ]);
 
   const showCursor = canStartLocalTypingAnimation && currentIndex < text.length && !hasLocallyCompletedTyping;
@@ -168,7 +171,8 @@ const TypingParagraph: React.FC<TypingParagraphProps> = ({ text, originalTypingS
 
 export const TypewriterText: React.FC<TypewriterTextProps> = ({
   fullText,
-  typingSpeed = 70, // Default original speed
+  messageId,
+  typingSpeed = 70,
   className = "",
 }) => {
   const { initializeTypingChain, resetTypingChain } = useTypingStore(state => state.actions);
@@ -176,19 +180,16 @@ export const TypewriterText: React.FC<TypewriterTextProps> = ({
   const effectiveTypingSpeed = Math.max(10, typingSpeed);
 
   useEffect(() => {
-    // Initialize store when fullText (and thus paragraphs) changes
-    initializeTypingChain(paragraphs.length);
-    // Cleanup function to reset store when component unmounts or fullText changes again
-    return () => {
-      resetTypingChain();
-    };
-  }, [fullText, initializeTypingChain, resetTypingChain, paragraphs.length]);
+    // Initialize store with messageId when fullText changes
+    initializeTypingChain(messageId, paragraphs.length);
+  }, [fullText, initializeTypingChain, resetTypingChain, paragraphs.length, messageId]);
 
 
   return (
     <div className={`max-w-2xl mx-auto ${className}`}>
       {paragraphs.map((paragraphText, index) => (
         <TypingParagraph
+          messageId={messageId} // Pass messageId to each paragraph
           key={`${index}-${paragraphText.slice(0,10)}`} // More robust key if paragraph content can change at same index
           text={paragraphText}
           originalTypingSpeed={effectiveTypingSpeed}

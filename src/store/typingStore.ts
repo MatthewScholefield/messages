@@ -1,45 +1,96 @@
 import { create } from 'zustand';
+import { persist, createJSONStorage } from 'zustand/middleware';
 
-interface TypingState {
+interface TypingChainState {
   activeParagraphIndex: number;
   totalParagraphs: number;
-  isTypingChainActive: boolean; // True if the overall typing process for the current message is active
+  isTypingChainActive: boolean;
+}
+
+interface TypingState {
+  typingChains: Record<string, TypingChainState>;
   actions: {
-    initializeTypingChain: (paragraphCount: number) => void;
-    advanceToNextParagraph: () => void;
-    resetTypingChain: () => void;
+    initializeTypingChain: (messageId: string, paragraphCount: number) => void;
+    advanceToNextParagraph: (messageId: string) => void;
+    resetTypingChain: (messageId: string) => void;
+    getTypingChainState: (messageId: string) => TypingChainState;
   };
 }
 
-const initialState = {
+const defaultChainState: TypingChainState = {
   activeParagraphIndex: 0,
   totalParagraphs: 0,
   isTypingChainActive: false,
 };
 
-export const useTypingStore = create<TypingState>((set) => ({
-  ...initialState,
-  actions: {
-    initializeTypingChain: (paragraphCount) => {
-      set({
-        totalParagraphs: paragraphCount,
-        activeParagraphIndex: 0,
-        isTypingChainActive: paragraphCount > 0,
-      });
-    },
-    advanceToNextParagraph: () => {
-      set((state) => {
-        if (!state.isTypingChainActive) return {}; // Should not proceed if chain is not active
-        if (state.activeParagraphIndex < state.totalParagraphs - 1) {
-          return { activeParagraphIndex: state.activeParagraphIndex + 1 };
-        } else {
-          // All paragraphs have been processed
-          return { isTypingChainActive: false };
-        }
-      });
-    },
-    resetTypingChain: () => {
-      set(initialState);
-    },
-  },
-}));
+const initialState = {
+  typingChains: {},
+};
+
+export const useTypingStore = create<TypingState>()(
+  persist(
+    (set, get) => ({
+      ...initialState,
+      actions: {
+        initializeTypingChain: (messageId, paragraphCount) => {
+          set((state) => ({
+            typingChains: {
+            ...state.typingChains,
+              [messageId]: {
+                totalParagraphs: paragraphCount,
+                activeParagraphIndex: (state.typingChains[messageId] || {})?.activeParagraphIndex || 0,
+                isTypingChainActive: paragraphCount > 0,
+              },
+            },
+          }));
+        },
+        advanceToNextParagraph: (messageId) => {
+          set((state) => {
+            const chain = state.typingChains[messageId] || defaultChainState;
+            if (!chain.isTypingChainActive) return state;
+
+            if (chain.activeParagraphIndex < chain.totalParagraphs - 1) {
+              return {
+                typingChains: {
+                  ...state.typingChains,
+                  [messageId]: {
+                    ...chain,
+                    activeParagraphIndex: chain.activeParagraphIndex + 1,
+                  },
+                },
+              };
+            } else {
+              // All paragraphs have been processed
+              return {
+                typingChains: {
+                  ...state.typingChains,
+                  [messageId]: {
+                    ...chain,
+                    isTypingChainActive: false,
+                  },
+                },
+              };
+            }
+          });
+        },
+        resetTypingChain: (messageId) => {
+          set((state) => {
+            const newChains = { ...state.typingChains };
+            delete newChains[messageId];
+            return { typingChains: newChains };
+          });
+        },
+        getTypingChainState: (messageId) => {
+          return get().typingChains[messageId] || defaultChainState;
+        },
+      },
+    }),
+    {
+      name: 'typing-store',
+      storage: createJSONStorage(() => localStorage),
+      partialize: (state) => ({
+        typingChains: state.typingChains,
+      }),
+    }
+  )
+);
