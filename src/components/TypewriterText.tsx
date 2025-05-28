@@ -117,10 +117,22 @@ const TypingParagraph: React.FC<TypingParagraphProps> = ({ text, originalTypingS
       delayMultiplier = 2;
     }
 
+    // Make non-Chinese characters type 3.4x faster
+    // Chinese unicode range: \u4e00-\u9fff
+    const isChinese = /[\u4e00-\u9fff]/.test(currentChar);
+    const speedFactor = isChinese ? 1 : (0.297); // ≈ 0.294
+    const baseDelay = currentLocalTypingSpeed * delayMultiplier * speedFactor;
+
+    // Add randomness: Gaussian noise, mean=baseDelay, stddev=baseDelay*0.18
+    const stddev = baseDelay * 0.18;
+    let randomDelay = baseDelay + gaussianRandom() * stddev;
+    // Clamp to [baseDelay * 0.5, baseDelay * 2] to avoid extremes
+    randomDelay = Math.max(baseDelay * 0.5, Math.min(randomDelay, baseDelay * 2));
+
     const timerId = setTimeout(() => {
       setDisplayedText(text.substring(0, currentIndex + 1));
       setCurrentIndex(prevIndex => prevIndex + 1);
-    }, currentLocalTypingSpeed * delayMultiplier);
+    }, randomDelay);
 
     return () => clearTimeout(timerId);
   }, [
@@ -186,3 +198,11 @@ export const TypewriterText: React.FC<TypewriterTextProps> = ({
     </div>
   );
 };
+
+// Utility: Gaussian random number generator (mean=0, stddev=1)
+function gaussianRandom() {
+  let u = 0, v = 0;
+  while(u === 0) u = Math.random(); // Avoid 0
+  while(v === 0) v = Math.random();
+  return Math.sqrt(-2.0 * Math.log(u)) * Math.cos(2.0 * Math.PI * v);
+}
