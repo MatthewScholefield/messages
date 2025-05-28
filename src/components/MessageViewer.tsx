@@ -55,7 +55,6 @@ const MessageViewer = () => {
   return (
     <div className="min-h-screen bg-white text-neutral-800 flex flex-col items-center justify-center p-4 selection:bg-sky-300 selection:text-sky-900 animate-fade-in">
       <div className="container-center space-y-8">
-        {isLoading && <p className="text-center text-lg text-neutral-600 animate-pulse">Loading message...</p>}
         {errorMessage && <p className="mt-4 text-red-600 text-sm font-medium p-2 bg-red-50 rounded">{errorMessage}</p>}
         {id && decryptedMessage && (
           <div className="p-6">

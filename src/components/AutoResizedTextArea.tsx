@@ -54,6 +54,7 @@ export const AutoResizedTextArea: React.FC<AutoResizedTextAreaProps> = ({
           height: 0,
           left: 0,
           top: 0,
+          userSelect: "none"
         }}
         aria-hidden="true"
       >

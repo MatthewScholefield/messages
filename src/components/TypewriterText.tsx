@@ -157,12 +157,12 @@ const TypingParagraph: React.FC<TypingParagraphProps> = ({ messageId, text, orig
       ref={paragraphRef}
       className={`relative w-full whitespace-pre-wrap min-h-[1.5em] ${hasFadedIn ? 'opacity-100' : 'opacity-0'} transition-opacity duration-500 ease-in-out`}
     >
-      <span className={`absolute top-0 left-0 w-full h-full whitespace-pre-wrap ${showCursor ? 'custom-cursor' : ''}`}>
+      <span className={`z-10 select-text absolute top-0 left-0 w-full h-full whitespace-pre-wrap ${showCursor ? 'custom-cursor' : ''}`}>
         {displayedText}
         {/* {showCursor && <span className="inline-block w-0.5 h-[1em] bg-current animate-blink ml-px -mb-1 align-text-bottom"></span>} */}
       </span>
       {/* Hidden span for layout. Contains full text or a non-breaking space for empty lines. */}
-      <span aria-hidden="true" className="opacity-0">
+      <span aria-hidden="true" className="opacity-0 select-none -z-10">
         {text.length > 0 ? text : '\u00A0'}
       </span>
     </p>
