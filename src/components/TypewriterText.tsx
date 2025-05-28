@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { useIntersectionObserver } from "@uidotdev/usehooks";
 import { useTypingStore } from "../store/typingStore";
 
-const FAST_TYPING_SPEED = 5; // Milliseconds for fast typing when off-screen
+const FAST_TYPING_SPEED = 0; // Milliseconds for fast typing when off-screen
 const FADE_IN_DURATION = 500; // Must match Tailwind's transition duration
 
 interface TypewriterTextProps {
@@ -31,13 +31,13 @@ const TypingParagraph: React.FC<TypingParagraphProps> = ({ messageId, text, orig
   
   // Get the chain state for this specific message
   const storeActiveParagraphIndex = chainState.activeParagraphIndex;
-  const storeIsTypingChainActive = chainState.isTypingChainActive;
+  const paragraphCount = chainState.totalParagraphs;
 
   const [paragraphRef, entry] = useIntersectionObserver({ threshold: 0.1 });
   const isIntersecting = entry?.isIntersecting ?? false;
 
   const hasLocallyCompletedTyping = storeActiveParagraphIndex > paragraphIndex;
-  const isMyTurn = paragraphIndex === storeActiveParagraphIndex && storeIsTypingChainActive;
+  const isMyTurn = paragraphIndex === storeActiveParagraphIndex;
 
   // Effect to reset paragraph state if text or index changes (for component reuse)
   useEffect(() => {
@@ -71,7 +71,6 @@ const TypingParagraph: React.FC<TypingParagraphProps> = ({ messageId, text, orig
     }
   }, [isMyTurn, isIntersecting, originalTypingSpeed, currentLocalTypingSpeed]);
 
-
   const canStartLocalTypingAnimation = isMyTurn && isIntersecting && text.length > 0;
 
   // Effect to handle empty text paragraphs
@@ -97,7 +96,7 @@ const TypingParagraph: React.FC<TypingParagraphProps> = ({ messageId, text, orig
       // Add post-paragraph delay before advancing
       if (!isWaitingAfterParagraph) {
         setIsWaitingAfterParagraph(true);
-        const delay = originalTypingSpeed * 10 * (text.length > 0 ? 1 : 0); // Only delay for non-empty
+        const delay = (storeActiveParagraphIndex + 1 < paragraphCount) ? originalTypingSpeed * 11 * (text.length > 0 ? 1 : 0) : 0; // Only delay for non-empty
         setTimeout(() => {
           setIsWaitingAfterParagraph(false);
           storeActions.advanceToNextParagraph(messageId);
@@ -140,6 +139,8 @@ const TypingParagraph: React.FC<TypingParagraphProps> = ({ messageId, text, orig
   }, [
     canStartLocalTypingAnimation,
     currentIndex,
+    storeActiveParagraphIndex,
+    paragraphCount,
     text,
     currentLocalTypingSpeed,
     hasLocallyCompletedTyping,
@@ -150,7 +151,7 @@ const TypingParagraph: React.FC<TypingParagraphProps> = ({ messageId, text, orig
     messageId // Add messageId to dependencies
   ]);
 
-  const showCursor = canStartLocalTypingAnimation && currentIndex < text.length && !hasLocallyCompletedTyping;
+  const showCursor = canStartLocalTypingAnimation && isMyTurn;
 
   return (
     <p
@@ -158,7 +159,7 @@ const TypingParagraph: React.FC<TypingParagraphProps> = ({ messageId, text, orig
       className={`relative w-full whitespace-pre-wrap min-h-[1.5em] ${hasFadedIn ? 'opacity-100' : 'opacity-0'} transition-opacity duration-500 ease-in-out`}
     >
       <span className={`z-10 ignore-br select-text absolute top-0 left-0 w-full h-full whitespace-pre-wrap ${showCursor ? 'custom-cursor' : ''}`}>
-        {displayedText}<br/><br/>
+        {displayedText}{hasLocallyCompletedTyping || (isMyTurn && currentIndex >= text.length) ? <><br/><br/></> : <></>}
         {/* {showCursor && <span className="inline-block w-0.5 h-[1em] bg-current animate-blink ml-px -mb-1 align-text-bottom"></span>} */}
       </span>
       {/* Hidden span for layout. Contains full text or a non-breaking space for empty lines. */}

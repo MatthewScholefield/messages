@@ -47,30 +47,15 @@ export const useTypingStore = create<TypingState>()(
         advanceToNextParagraph: (messageId) => {
           set((state) => {
             const chain = state.typingChains[messageId] || defaultChainState;
-            if (!chain.isTypingChainActive) return state;
-
-            if (chain.activeParagraphIndex < chain.totalParagraphs - 1) {
-              return {
-                typingChains: {
-                  ...state.typingChains,
-                  [messageId]: {
-                    ...chain,
-                    activeParagraphIndex: chain.activeParagraphIndex + 1,
-                  },
+            return {
+              typingChains: {
+                ...state.typingChains,
+                [messageId]: {
+                  ...chain,
+                  activeParagraphIndex: chain.activeParagraphIndex + 1,
                 },
-              };
-            } else {
-              // All paragraphs have been processed
-              return {
-                typingChains: {
-                  ...state.typingChains,
-                  [messageId]: {
-                    ...chain,
-                    isTypingChainActive: false,
-                  },
-                },
-              };
-            }
+              },
+            };
           });
         },
         resetTypingChain: (messageId) => {
