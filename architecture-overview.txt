@@ -1,0 +1,37 @@
+Project: Typewriter Messaging App
+
+Core Purpose:
+A frontend application allowing users to create and send thoughtful, typewriter-style messages to friends via shareable links. The messages type out at a realistic speed as the recipient reads, with more text appearing as they scroll down.
+
+Overall Code Implementation Details:
+- Entry Point: src/main.tsx initializes the React application.
+- Main Application Component: src/App.tsx handles routing (hash-based) between message creation and viewing modes, and orchestrates the message creation flow.
+- UI Components (src/components/):
+    - AutoResizedTextArea.tsx: Provides a text area that automatically resizes with content, featuring a custom typewriter-style cursor.
+    - TypewriterText.tsx: Displays text with a typewriter animation effect.
+    - MessageViewer.tsx: Manages the display of received messages, including fetching, decryption, and scroll-activated text reveal.
+- Utility Modules (src/utils/):
+    - crypto.ts: Implements client-side AES-GCM encryption/decryption (key generation, export/import, encrypt/decrypt functions) using the Web Crypto API.
+    - blobse.ts: Handles interaction with the Blobse API (https://blobse.us.to) for storing and retrieving encrypted message blobs.
+- Styling: src/index.css contains global styles, Tailwind CSS setup, and custom styles for the typewriter theme and cursor.
+
+Frameworks and Major Libraries:
+- React: Core UI library.
+- TypeScript: For static typing.
+- Vite: Build tool and development server.
+- Tailwind CSS: Utility-first CSS framework for styling.
+- @uidotdev/usehooks: Specifically `useMeasure` used in `AutoResizedTextArea.tsx`.
+
+Workflow:
+1. Create View (App.tsx): User types a message.
+2. On "Create Link":
+    - A symmetric key is generated (crypto.ts).
+    - The message is encrypted with this key (crypto.ts).
+    - The encrypted data is uploaded to Blobse (blobse.ts), returning a blob URL.
+    - A shareable link is constructed: `/#/view?id=<blobId>&key=<exportedKeyString>`.
+3. View Mode (App.tsx -> MessageViewer.tsx):
+    - When a user opens the shareable link, `MessageViewer.tsx` parses the blob ID and key string from the URL hash.
+    - The encrypted blob is fetched from Blobse (blobse.ts).
+    - The key string is imported back into a CryptoKey (crypto.ts).
+    - The message is decrypted (crypto.ts).
+    - The decrypted text is displayed using `TypewriterText.tsx`, revealing more text as the user scrolls.

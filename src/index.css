@@ -1,2 +1,60 @@
-@import "tailwindcss";
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;700&display=swap');
 
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+body {
+  font-family: 'Inter', sans-serif;
+  background-color: #f8f8f8;
+  color: #333;
+  font-size: 1.125rem;
+  line-height: 1.6;
+}
+
+/* Global container for center-aligned, limited-width content */
+.container-center {
+  max-width: 768px;
+  margin-left: auto;
+  margin-right: auto;
+  padding: 1rem;
+}
+
+.custom-cursor::after {
+  content: '';
+  display: inline-block; /* Or 'block' if it's on its own line */
+  width: 10px; /* Adjust as needed */
+  height: 1.2em; /* Should match line height */
+  background-color: currentColor; /* Or a specific color like #ff00ff */
+  animation: blink 1s step-end infinite;
+  margin-left: 2px; /* Small space after text */
+  vertical-align: baseline;
+}
+
+@keyframes blink {
+  from, to { background-color: transparent; }
+  50% { background-color: currentColor; } /* Or a specific color */
+}
+
+/* Basic styling for textarea to make it look more "typewriter-y" */
+.textarea {
+  font-family: 'Inter', sans-serif; /* Use the new consistent font */
+  line-height: 1.6;
+  border: none; /* Remove border */
+  outline: none; /* Remove outline on focus */
+  resize: none; /* Disable manual resize */
+  background-color: transparent; /* Ensure transparent background */
+}
+
+.typewriter-cursor {
+  animation: blink 1s step-end infinite;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.5s ease-out forwards;
+}
