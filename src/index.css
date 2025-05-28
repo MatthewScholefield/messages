@@ -11,13 +11,10 @@ body {
   line-height: 1.6;
 }
 
-/* Global container for center-aligned, limited-width content */
-.container-center {
-  max-width: 768px;
-  margin-left: auto;
-  margin-right: auto;
-  padding: 1rem;
+.ignore-br br {
+  display: inline; /* Hide <br> elements */
 }
+
 
 .custom-cursor::after {
   content: '';

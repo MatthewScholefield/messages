@@ -157,8 +157,8 @@ const TypingParagraph: React.FC<TypingParagraphProps> = ({ messageId, text, orig
       ref={paragraphRef}
       className={`relative w-full whitespace-pre-wrap min-h-[1.5em] ${hasFadedIn ? 'opacity-100' : 'opacity-0'} transition-opacity duration-500 ease-in-out`}
     >
-      <span className={`z-10 select-text absolute top-0 left-0 w-full h-full whitespace-pre-wrap ${showCursor ? 'custom-cursor' : ''}`}>
-        {displayedText}
+      <span className={`z-10 ignore-br select-text absolute top-0 left-0 w-full h-full whitespace-pre-wrap ${showCursor ? 'custom-cursor' : ''}`}>
+        {displayedText}<br/><br/>
         {/* {showCursor && <span className="inline-block w-0.5 h-[1em] bg-current animate-blink ml-px -mb-1 align-text-bottom"></span>} */}
       </span>
       {/* Hidden span for layout. Contains full text or a non-breaking space for empty lines. */}
@@ -176,7 +176,14 @@ export const TypewriterText: React.FC<TypewriterTextProps> = ({
   className = "",
 }) => {
   const { initializeTypingChain, resetTypingChain } = useTypingStore(state => state.actions);
-  const paragraphs = fullText.split(/\n+/);
+  // Split paragraphs without using lookbehind (for Safari compatibility)
+  // First, replace newlines after commas with a special marker
+  const markedText = fullText.replace(/(，|,)\n/g, '$1\uE000');
+  // Then split by one or more newlines
+  const paragraphs = markedText.split(/\n+/).map(p => 
+    // Finally, restore the markers back to newlines
+    p.replace(/\uE000/g, '\n')
+  );
   const effectiveTypingSpeed = Math.max(10, typingSpeed);
 
   useEffect(() => {
