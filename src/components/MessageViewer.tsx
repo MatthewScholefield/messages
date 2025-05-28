@@ -53,16 +53,16 @@ const MessageViewer = () => {
   }, []); // Empty dependency array means this runs once on mount and cleans up on unmount
 
   return (
-    <div className="min-h-screen bg-neutral-100 text-neutral-800 flex flex-col items-center justify-center p-4 selection:bg-sky-300 selection:text-sky-900 animate-fade-in">
+    <div className="min-h-screen bg-white text-neutral-800 flex flex-col items-center justify-center p-4 selection:bg-sky-300 selection:text-sky-900 animate-fade-in">
       <div className="container-center space-y-8">
         {isLoading && <p className="text-center text-lg text-neutral-600 animate-pulse">Loading message...</p>}
         {errorMessage && <p className="mt-4 text-red-600 text-sm font-medium p-2 bg-red-50 rounded">{errorMessage}</p>}
         {id && decryptedMessage && (
-          <div className="bg-white p-6 shadow-lg rounded-md">
+          <div className="p-6">
             <TypewriterText
               messageId={id} // Pass the ID for potential future use
               fullText={decryptedMessage}
-              className="text-lg leading-relaxed whitespace-pre-wrap p-3"
+              className="text-lg leading-relaxed whitespace-pre-wrap space-y-4"
             />
           </div>
         )}

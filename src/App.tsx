@@ -4,10 +4,11 @@ import { generateSymmetricKey, encryptText, exportKeyToString } from './utils/cr
 import { uploadToBlobse } from './utils/blobse';
 import MessageViewer from './components/MessageViewer';
 import Button from './components/Button';
+import { ArrowRightIcon } from '@heroicons/react/24/outline';
 
 function App() {
   const [currentView, setCurrentView] = useState<'create' | 'view'>('create');
-  const [inputValue, setInputValue] = useState("Dear friend,\n\nThis is a test message.\n\nSincerely,\nA Coder");
+  const [inputValue, setInputValue] = useState("");
   const [generatedLink, setGeneratedLink] = useState<string | null>(null);
   const [isCreatingLink, setIsCreatingLink] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
@@ -81,29 +82,39 @@ function App() {
     <>
       {currentView === 'create' ? (
         <div className="min-h-screen bg-neutral-100 text-neutral-800 flex flex-col items-center justify-center p-4 selection:bg-sky-300 selection:text-sky-900 animate-fade-in">
-          <div className="container-center space-y-8">
-            <h1 className="text-4xl font-bold text-center text-sky-700">Typewriter Messenger</h1>
-            
-            <div className="bg-white p-6 shadow-lg rounded-md">
-              <h2 className="text-2xl mb-4 text-neutral-700">Compose your message:</h2>
+          <div className="space-y-8 max-w-2xl w-full">
+            <div className="bg-white p-6 shadow-lg rounded-md relative mb-8">
               <AutoResizedTextArea
                 value={inputValue}
                 onChange={handleInputValueChange} // Use the memoized handler
-                placeholder="Type your thoughtful message here..."
-                className="w-full bg-transparent text-lg focus:outline-none resize-none custom-cursor border border-neutral-300 rounded p-3 min-h-[100px]"
+                placeholder="Type your message here..."
+                className="w-full bg-transparent text-lg focus:outline-none"
                 rows={3}
                 autoFocus
               />
-              <Button
-                onClick={handleCreateLink}
-                disabled={isCreatingLink}
-                className="mt-4 w-full"
-              >
-                {isCreatingLink ? 'Creating Link...' : 'Create Shareable Link'}
-              </Button>
+              
+              {/* Circular button that appears when there's text */}
+              <div className={`absolute transition-all duration-300 -bottom-7 right-4 ${inputValue.trim().length ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}>
+                <Button
+                  onClick={handleCreateLink}
+                  disabled={isCreatingLink}
+                  variant="circular"
+                  icon={
+                    isCreatingLink ? (
+                      <svg className="animate-spin h-5 w-5 text-black " xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                      </svg>
+                    ) : (
+                      <ArrowRightIcon className="w-5 h-5"/>
+                    )
+                  }
+                >
+                </Button>
+              </div>
 
               {generatedLink && (
-                <div className="mt-6 p-4 bg-neutral-50 border border-neutral-200 rounded animate-fade-in">
+                <div className="mt-10 p-4 bg-neutral-50 border border-neutral-200 rounded animate-fade-in">
                   <p className="text-neutral-700 mb-2">Share this link:</p>
                   <input
                     type="text"
@@ -124,15 +135,6 @@ function App() {
                 <p className="mt-4 text-red-600 text-sm font-medium p-2 bg-red-50 rounded">{errorMessage}</p>
               )}
             </div>
-
-            {/* <div className="bg-white p-6 shadow-lg rounded-md">
-              <h2 className="text-2xl mb-4 text-neutral-700">Preview:</h2>
-              <TypewriterText
-                fullText={inputValue}
-                typingSpeed={50}
-                className="text-lg leading-relaxed whitespace-pre-wrap p-3 border border-dashed border-neutral-300 rounded min-h-[100px]"
-              />
-            </div> */}
           </div>
         </div>
       ) : (

@@ -1,17 +1,16 @@
 import React from 'react';
 
 interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
-  children: React.ReactNode;
+  children?: React.ReactNode;
   className?: string;
+  variant?: 'default' | 'circular';
+  icon?: React.ReactNode;
 }
 
-const Button: React.FC<ButtonProps> = ({ children, className, ...props }) => {
+const Button: React.FC<ButtonProps> = ({ children, className, variant = 'default', icon, ...props }) => {
   const baseStyles = `
     bg-gray-200
     text-gray-800
-    py-2
-    px-4
-    rounded-md
     border-none
     font-inter
     text-base
@@ -27,8 +26,30 @@ const Button: React.FC<ButtonProps> = ({ children, className, ...props }) => {
     cursor-pointer
   `;
 
+  const variantStyles = {
+    default: `
+      py-2
+      px-4
+      rounded-md
+    `,
+    circular: `
+      flex
+      items-center
+      justify-center
+      rounded-full
+      w-14
+      h-14
+      shadow-lg
+      hover:shadow-xl
+    `
+  };
+
   return (
-    <button className={`${baseStyles} ${className || ''}`} {...props}>
+    <button 
+      className={`${baseStyles} ${variantStyles[variant]} ${className || ''}`} 
+      {...props}
+    >
+      {icon && <span className="flex items-center justify-center">{icon}</span>}
       {children}
     </button>
   );
